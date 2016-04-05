@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="getAllBills.aspx.cs" Inherits="Server.getAllBills" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="GetAllBills.aspx.cs" Inherits="Server.GetAllBills" %>
 
 <!DOCTYPE html>
 

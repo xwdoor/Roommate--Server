@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="getUserBill.aspx.cs" Inherits="Server.getUserBill" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="GetUserBill.aspx.cs" Inherits="Server.GetUserBill" %>
 
 <!DOCTYPE html>
 
