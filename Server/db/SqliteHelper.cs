@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
@@ -14,7 +15,7 @@ namespace Server.db
     /// </summary>
     public class SqliteHelper
     {
-        public static string DatabaseFile = @"F:\GitHub\Roommate--Server\Server\bin\Roommate.db";
+        public static string DatabaseFile = @"F:\Roommate.db";
 
         public static string ConnectionString
         {
@@ -23,10 +24,12 @@ namespace Server.db
         
         public List<string> TableList;
 
+        #region 私有方法
+        
         public SqliteHelper()
         {
-            InitDatabaseFile();
             TableList = new List<string>();
+            InitDatabaseFile();
         }
 
         private void InitDatabaseFile()
@@ -34,13 +37,9 @@ namespace Server.db
             if (!File.Exists(DatabaseFile))
             {
                 SQLiteConnection.CreateFile(DatabaseFile);
-                CreateTables();
             }
-            else
-            {
-                FindTables();
-            }
-
+            FindTables();
+            CreateTables();
         }
 
         /// <summary>
@@ -57,7 +56,10 @@ namespace Server.db
                 "billType integer," +
                 "date varchar(20)," +
                 "desc text)";
-            ExecSQL(createBillData);
+            if (!TableList.Contains(tableBill) && !IsTableExist(tableBill))
+            {
+                ExecSQL(createBillData);
+            }
 
             string tableUser = "R_User";
             string createUser =
@@ -68,24 +70,16 @@ namespace Server.db
                 "phone varchar(20)," +
                 "password varchar(20)," +
                 "mail varchar(20))";
-            ExecSQL(createUser);
+            if (!TableList.Contains(tableUser) && !IsTableExist(tableUser))
+            {
+                ExecSQL(createUser);
+            }
         }
 
-        /// <summary>
-        /// 执行sql语句
-        /// </summary>
-        /// <param name="sql">sql语句</param>
-        private void ExecSQL(string sql)
+        private bool IsTableExist(string tableName)
         {
-            SQLiteConnection conn = new SQLiteConnection(ConnectionString);
-            
-            conn.Open();
-            SQLiteCommand cmd = conn.CreateCommand();
-            cmd.CommandText = sql;
-            cmd.ExecuteNonQuery();
-            cmd.Dispose();
-            conn.Close();
-            conn.Dispose();
+            string sql = string.Format("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='{0}'", tableName);
+            return ExecSQL(sql)==1;
         }
 
         /// <summary>
@@ -93,27 +87,122 @@ namespace Server.db
         /// </summary>
         private void FindTables()
         {
-            
+            string sql = "SELECT name FROM SQLITE_MASTER WHERE type='table' ORDER BY name";
+            DataSet set = QueryData(sql);
+            if (set != null && set.Tables.Count > 0)
+            {
+                foreach (DataRow row in set.Tables[0].Rows)
+                {
+                    TableList.Add((string) row[0]);
+                }
+            }
+            Console.WriteLine(TableList);
         }
+
+        /// <summary>
+        /// 执行sql语句
+        /// </summary>
+        /// <param name="sql">sql语句</param>
+        /// <param name="parameters">参数</param>
+        /// <returns>执行结果</returns>
+        private int ExecSQL(string sql, SQLiteParameter[] parameters = null)
+        {
+            SQLiteConnection conn = new SQLiteConnection(ConnectionString);
+            
+            conn.Open();
+            SQLiteCommand cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            if (parameters != null)
+            {
+                cmd.Parameters.AddRange(parameters);
+            }
+            int result = cmd.ExecuteNonQuery();
+            
+            cmd.Dispose();
+            conn.Close();
+            conn.Dispose();
+
+            return result;
+        }
+
+        private DataTable QueryData(string sql, SQLiteParameter[] parameters = null)
+        {
+            DataTable data = new DataTable();
+
+            SQLiteConnection conn = new SQLiteConnection(ConnectionString);
+            SQLiteCommand cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            if (parameters != null)
+            {
+                cmd.Parameters.AddRange(parameters);
+            }
+            SQLiteDataAdapter adapter = new SQLiteDataAdapter(cmd);
+            
+            adapter.Fill(data);
+            cmd.Dispose();
+            conn.Dispose();
+            return data;
+        }
+
+        private int InsertData(string sql, SQLiteParameter[] parameters)
+        {
+            return ExecSQL(sql,parameters);
+        }
+
+        #endregion
 
         /// <summary>
         /// 获取用户信息
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="whereClause"></param>
-        /// <param name="whereArgs"></param>
-        public DataSet GetUsers(string tableName, string whereClause, string[] whereArgs)
+        public DataTable Query(string tableName, string[] columns, string whereClause, string[] whereArgs)
         {
-            DataSet dataSet = new DataSet();
-            StringBuilder sb = new StringBuilder();
-            sb.Append("SELECT * FROM ");
-            sb.Append(tableName);
-            if (!string.IsNullOrEmpty(whereClause))
+            StringBuilder sBuilder = new StringBuilder();
+            sBuilder.Append("SELECT DISTINCT ");
+            if (columns == null || columns.Length == 0)
             {
-                sb.Append(" where ");
+                sBuilder.Append("* ");
             }
+            else
+            {
+                AppendColumns(sBuilder, columns);
+            }
+            sBuilder.AppendFormat("From {0} ",tableName);
+            sBuilder.AppendFormat("WHERE {0}",whereClause);
+            //SQLiteParameter[] parameters = BuildWhereArgs()
             
-            return dataSet;
+            return QueryData(sBuilder.ToString(),null);
+        }
+
+        /// <summary>
+        /// 添加选择的列名
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="columns"></param>
+        private void AppendColumns(StringBuilder s, string[] columns)
+        {
+            int n = columns.Length;
+
+            for (int i = 0; i < n; i++)
+            {
+                string column = columns[i];
+
+                if (column != null)
+                {
+                    if (i > 0)
+                    {
+                        s.Append(", ");
+                    }
+                    s.Append(column);
+                }
+            }
+            s.Append(' ');
+        }
+
+        public int Insert()
+        {
+            string sql = "INSERT INTO R_User(userName,realName,phone,password,mail) VALUES('xwdoor','肖威','18684033888','xwdoor','xwdoor@126.com')";
+             
+            return InsertData(sql,null);
         }
     }
 }

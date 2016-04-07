@@ -67,6 +67,8 @@
     <Content Include="AddUser.aspx" />
     <Content Include="dll\Newtonsoft.Json.dll" />
     <Content Include="dll\System.Data.SQLite.dll" />
+    <Content Include="dll\x64\SQLite.Interop.dll" />
+    <Content Include="dll\x86\SQLite.Interop.dll" />
     <Content Include="GetAllBills.aspx" />
     <Content Include="GetUserBill.aspx" />
     <Content Include="Login.aspx" />
@@ -80,6 +82,7 @@
     <Compile Include="AddUser.aspx.designer.cs">
       <DependentUpon>AddUser.aspx</DependentUpon>
     </Compile>
+    <Compile Include="db\ContentValue.cs" />
     <Compile Include="db\SqliteHelper.cs" />
     <Compile Include="db\UserDao.cs" />
     <Compile Include="GetAllBills.aspx.cs">
