@@ -88,14 +88,15 @@ namespace Server.db
         private void FindTables()
         {
             string sql = "SELECT name FROM SQLITE_MASTER WHERE type='table' ORDER BY name";
-            DataSet set = QueryData(sql);
-            if (set != null && set.Tables.Count > 0)
+            DataTable table = QueryData(sql);
+            if (table != null && table.Rows.Count > 0)
             {
-                foreach (DataRow row in set.Tables[0].Rows)
+                foreach (DataRow row in table.Rows)
                 {
-                    TableList.Add((string) row[0]);
+                    TableList.Add((string)row[0]);
                 }
             }
+            
             Console.WriteLine(TableList);
         }
 
@@ -125,15 +126,16 @@ namespace Server.db
             return result;
         }
 
-        private DataTable QueryData(string sql, SQLiteParameter[] parameters = null)
+        private DataTable QueryData(string sql, ContentValue whereArgs = null)
         {
             DataTable data = new DataTable();
 
             SQLiteConnection conn = new SQLiteConnection(ConnectionString);
             SQLiteCommand cmd = conn.CreateCommand();
             cmd.CommandText = sql;
-            if (parameters != null)
+            if (whereArgs != null)
             {
+                SQLiteParameter[] parameters = BuildWhereArgs(whereArgs);
                 cmd.Parameters.AddRange(parameters);
             }
             SQLiteDataAdapter adapter = new SQLiteDataAdapter(cmd);
@@ -149,28 +151,23 @@ namespace Server.db
             return ExecSQL(sql,parameters);
         }
 
-        #endregion
-
         /// <summary>
-        /// 获取用户信息
+        /// 组建选择条件参数
         /// </summary>
-        public DataTable Query(string tableName, string[] columns, string whereClause, string[] whereArgs)
+        /// <param name="whereArgs"></param>
+        /// <returns></returns>
+        private SQLiteParameter[] BuildWhereArgs(ContentValue whereArgs)
         {
-            StringBuilder sBuilder = new StringBuilder();
-            sBuilder.Append("SELECT DISTINCT ");
-            if (columns == null || columns.Length == 0)
+            //LinQ实现
+            //return whereArgs.Keys.Select(key => new SQLiteParameter(key, whereArgs.Get(key))).ToArray();
+
+            List<SQLiteParameter> list = new List<SQLiteParameter>();
+            foreach (string key in whereArgs.Keys)
             {
-                sBuilder.Append("* ");
+                SQLiteParameter parameter = new SQLiteParameter(key, whereArgs.Get(key));
+                list.Add(parameter);
             }
-            else
-            {
-                AppendColumns(sBuilder, columns);
-            }
-            sBuilder.AppendFormat("From {0} ",tableName);
-            sBuilder.AppendFormat("WHERE {0}",whereClause);
-            //SQLiteParameter[] parameters = BuildWhereArgs()
-            
-            return QueryData(sBuilder.ToString(),null);
+            return list.ToArray();
         }
 
         /// <summary>
@@ -196,6 +193,29 @@ namespace Server.db
                 }
             }
             s.Append(' ');
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 查询
+        /// </summary>
+        public DataTable Query(string tableName, string[] columns, string whereClause, ContentValue whereArgs)
+        {
+            StringBuilder sBuilder = new StringBuilder();
+            sBuilder.Append("SELECT DISTINCT ");
+            if (columns == null || columns.Length == 0)
+            {
+                sBuilder.Append("* ");
+            }
+            else
+            {
+                AppendColumns(sBuilder, columns);
+            }
+            sBuilder.AppendFormat("From {0} ",tableName);
+            sBuilder.AppendFormat("WHERE {0}",whereClause);
+            
+            return QueryData(sBuilder.ToString(),whereArgs);
         }
 
         public int Insert()
