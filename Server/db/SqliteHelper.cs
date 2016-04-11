@@ -135,7 +135,7 @@ namespace Server.db
             cmd.CommandText = sql;
             if (whereArgs != null)
             {
-                SQLiteParameter[] parameters = BuildWhereArgs(whereArgs);
+                SQLiteParameter[] parameters = BuildParameter(whereArgs);
                 cmd.Parameters.AddRange(parameters);
             }
             SQLiteDataAdapter adapter = new SQLiteDataAdapter(cmd);
@@ -146,25 +146,26 @@ namespace Server.db
             return data;
         }
 
-        private int InsertData(string sql, SQLiteParameter[] parameters)
+        private int InsertData(string sql, ContentValue value)
         {
-            return ExecSQL(sql,parameters);
+            SQLiteParameter[] parameters = BuildParameter(value);
+            return ExecSQL(sql, parameters);
         }
 
         /// <summary>
         /// 组建选择条件参数
         /// </summary>
-        /// <param name="whereArgs"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
-        private SQLiteParameter[] BuildWhereArgs(ContentValue whereArgs)
+        private SQLiteParameter[] BuildParameter(ContentValue value)
         {
             //LinQ实现
-            //return whereArgs.Keys.Select(key => new SQLiteParameter(key, whereArgs.Get(key))).ToArray();
+            //return value.Keys.Select(key => new SQLiteParameter(key, value.Get(key))).ToArray();
 
             List<SQLiteParameter> list = new List<SQLiteParameter>();
-            foreach (string key in whereArgs.Keys)
+            foreach (string key in value.Keys)
             {
-                SQLiteParameter parameter = new SQLiteParameter(key, whereArgs.Get(key));
+                SQLiteParameter parameter = new SQLiteParameter("@" + key, value.Get(key));
                 list.Add(parameter);
             }
             return list.ToArray();
@@ -207,27 +208,61 @@ namespace Server.db
         /// <returns></returns>
         public DataTable Query(string tableName, string[] columns, string whereClause, ContentValue whereArgs)
         {
-            StringBuilder sBuilder = new StringBuilder();
-            sBuilder.Append("SELECT DISTINCT ");
+            StringBuilder sql = new StringBuilder();
+            sql.Append("SELECT DISTINCT ");
             if (columns == null || columns.Length == 0)
             {
-                sBuilder.Append("* ");
+                sql.Append("* ");
             }
             else
             {
-                AppendColumns(sBuilder, columns);
+                AppendColumns(sql, columns);
             }
-            sBuilder.AppendFormat("FROM {0} ",tableName);
-            sBuilder.AppendFormat("WHERE {0}",whereClause);
+            sql.AppendFormat("FROM {0} ",tableName);
+            sql.AppendFormat("WHERE {0}",whereClause);
             
-            return QueryData(sBuilder.ToString(),whereArgs);
+            return QueryData(sql.ToString(),whereArgs);
         }
 
-        public int Insert()
+        public int Insert(string tableName, ContentValue value)
         {
-            string sql = "INSERT INTO R_User(userName,realName,phone,password,mail) VALUES('xwdoor','肖威','18684033888','xwdoor','xwdoor@126.com')";
-             
-            return InsertData(sql,null);
+            int resultCode;
+
+            StringBuilder sql = new StringBuilder();
+            sql.Append("INSERT INTO ");
+            sql.Append(tableName);
+            sql.Append('(');
+
+            int size = (value != null && value.Keys.Any()) ? value.Keys.Count : 0;
+            if (size > 0)
+            {
+                int i = 0;
+                string[] bindArgs = new string[size];
+                foreach (string colName in value.Keys)
+                {
+                    sql.Append((i > 0) ? "," : "");
+                    sql.Append(colName);
+                    bindArgs[i] = colName;
+                    i++;
+                }
+                sql.Append(')');
+                sql.Append(" VALUES (");
+                for (i = 0; i < size; i++)
+                {
+                    sql.Append((i > 0) ? ",@" + bindArgs[i] : "@" + bindArgs[i]);
+                }
+                sql.Append(')');
+                resultCode = InsertData(sql.ToString(), value);
+            }
+            else
+            {
+                resultCode = -1;
+            }
+            
+
+            //string sql = "INSERT INTO R_User(userName,realName,phone,password,mail) VALUES('xwdoor','肖威','18684033888','xwdoor','xwdoor@126.com')";
+
+            return resultCode;
         }
     }
 }

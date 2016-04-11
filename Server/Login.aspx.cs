@@ -52,16 +52,7 @@ namespace Server
 
         protected void ButtonLogin_Click(object sender, EventArgs e)
         {
-            SqliteHelper sqlite = new SqliteHelper();
-            sqlite.Insert();
-
-            ContentValue values = new ContentValue();
-            values.Put("@userName","xwdoor");
-            DataTable table = sqlite.Query("R_User", new[] { "userName","phone" }, "userName=@userName", values);
-            foreach (DataRow row in table.Rows)
-            {
-                Console.WriteLine(row.ItemArray[0]);
-            }
+            
         }
     }
 }

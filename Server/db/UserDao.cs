@@ -14,6 +14,7 @@ namespace Server.db
     {
         private readonly SqliteHelper sqliteHelper;
         public static readonly UserDao Instance = new UserDao();
+
         private UserDao()
         {
             sqliteHelper = new SqliteHelper();
@@ -27,14 +28,20 @@ namespace Server.db
         public static string ColumnPassword = "password";
         public static string ColumnMail = "mail";
 
+        /// <summary>
+        /// 获取用户信息
+        /// </summary>
+        /// <param name="loginName">登录名</param>
+        /// <param name="pwd">密码</param>
+        /// <returns>用户信息</returns>
         public User GetUser(string loginName, string pwd)
         {
             ContentValue value = new ContentValue();
-            value.Put("@"+ColumnUserName,loginName);
-            value.Put("@"+ColumnRealName,loginName);
-            value.Put("@"+ColumnPhone,loginName);
-            value.Put("@"+ColumnMail,loginName);
-            value.Put("@"+ColumnPassword,pwd);
+            value.Put(ColumnUserName, loginName);
+            value.Put(ColumnRealName, loginName);
+            value.Put(ColumnPhone, loginName);
+            value.Put(ColumnMail, loginName);
+            value.Put(ColumnPassword, pwd);
             DataTable table = sqliteHelper.Query(TableUser, null,
                 string.Format("{0}=@{0} OR {1}=@{1} OR {2}=@{2} OR {3}=@{3} AND {4}=@{4}", ColumnUserName,
                     ColumnRealName, ColumnPhone, ColumnMail, ColumnPassword), value);
@@ -52,6 +59,18 @@ namespace Server.db
                 };
             }
             return user;
+        }
+
+        public int AddUser(User user)
+        {
+            ContentValue value = new ContentValue();
+            value.Put(ColumnUserName, user.UserName);
+            value.Put(ColumnRealName, user.RealName);
+            value.Put(ColumnPhone, user.Phone);
+            value.Put(ColumnMail, user.Mail);
+            value.Put(ColumnPassword, user.Password);
+            int result = sqliteHelper.Insert(TableUser,value);
+            return result;
         }
     }
 }
