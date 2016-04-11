@@ -200,6 +200,11 @@ namespace Server.db
         /// <summary>
         /// 查询
         /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="columns">选择的列</param>
+        /// <param name="whereClause">选择条件，格式：列名=@列名</param>
+        /// <param name="whereArgs">选择条件的具体值，key格式：@列名</param>
+        /// <returns></returns>
         public DataTable Query(string tableName, string[] columns, string whereClause, ContentValue whereArgs)
         {
             StringBuilder sBuilder = new StringBuilder();
@@ -212,7 +217,7 @@ namespace Server.db
             {
                 AppendColumns(sBuilder, columns);
             }
-            sBuilder.AppendFormat("From {0} ",tableName);
+            sBuilder.AppendFormat("FROM {0} ",tableName);
             sBuilder.AppendFormat("WHERE {0}",whereClause);
             
             return QueryData(sBuilder.ToString(),whereArgs);
