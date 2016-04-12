@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Web;
+﻿using System.Collections.Generic;
 
-namespace Server.db
+namespace Roommate.Server.db
 {
     public class ContentValue
     {
@@ -30,5 +26,9 @@ namespace Server.db
             return mValues[key];
         }
 
+        public bool Remove(string key)
+        {
+            return mValues.Remove(key);
+        }
     }
 }

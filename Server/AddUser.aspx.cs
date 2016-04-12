@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
-using Server.db;
-using Server.model;
+using Newtonsoft.Json;
+using Roommate.Server.db;
+using Roommate.Server.model;
 
-namespace Server
+namespace Roommate.Server
 {
     public partial class AddUser : System.Web.UI.Page
     {
@@ -44,9 +40,22 @@ namespace Server
                         Mail = mail,
                         Password = password
                     };
-                    UserDao.Instance.AddUser(user);
+                    int resultCode = UserDao.Instance.AddUser(user);
+                    if (resultCode == 1)
+                    {
+                        response.Code = 0;
+                        user.Password = "";
+                        response.Result = JsonConvert.SerializeObject(user);
+                    }
+                    else
+                    {
+                        response.Code = 4;
+                        response.Error = "数据提交错误";
+                    }
                 }
             }
+
+            Response.Write(JsonConvert.SerializeObject(response));
         }
 
         protected void ButtonAddUser_Click(object sender, EventArgs e)
@@ -59,7 +68,15 @@ namespace Server
                 Mail = "xwdoor@126.com",
                 Password = "xwdoor"
             };
-            UserDao.Instance.AddUser(user);
+            int resultCode = UserDao.Instance.AddUser(user);
+            ResponseJson response = new ResponseJson();
+            if (resultCode == 1)
+            {
+                response.Code = 0;
+                user.Password = "";
+                response.Result = JsonConvert.SerializeObject(user);
+            }
+            Response.Write(JsonConvert.SerializeObject(response));
         }
     }
 }
