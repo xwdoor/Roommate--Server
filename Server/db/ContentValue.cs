@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Roommate.Server.db
+namespace Server.db
 {
     public class ContentValue
     {

@@ -1,9 +1,9 @@
 ﻿using System;
 using Newtonsoft.Json;
-using Roommate.Server.db;
-using Roommate.Server.model;
+using Server.db;
+using Server.model;
 
-namespace Roommate.Server
+namespace Server
 {
     public partial class AddUser : System.Web.UI.Page
     {

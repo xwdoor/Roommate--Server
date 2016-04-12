@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Data;
-using Roommate.Server.model;
+using Server.model;
 
-namespace Roommate.Server.db
+namespace Server.db
 {
     /// <summary>
     /// 用户数据库操作
